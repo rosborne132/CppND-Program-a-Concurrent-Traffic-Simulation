@@ -43,7 +43,7 @@ public:
 
     // getters / setters
     TrafficLightPhase getCurrentPhase();
-    void getCurrentPhase(TrafficLightPhase newPhase);
+    void setCurrentPhase(TrafficLightPhase newPhase);
 
     // typical behaviour methods
     void waitForGreen();
@@ -52,6 +52,8 @@ public:
 private:
     // typical behaviour methods
     void cycleThroughPhases();
+    double generateWaitDuration();
+    void togglePhase();
     TrafficLightPhase _currentPhase;
 
     // FP.4b : create a private member of type MessageQueue for messages of type TrafficLightPhase
