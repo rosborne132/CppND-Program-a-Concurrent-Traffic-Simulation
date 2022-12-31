@@ -45,13 +45,11 @@ double TrafficLight::generateWaitDuration() {
 
 void TrafficLight::togglePhase() {
     TrafficLightPhase currentPhase = getCurrentPhase();
+    TrafficLightPhase newPhase = (currentPhase == TrafficLightPhase::green)
+        ? TrafficLightPhase::red
+        : TrafficLightPhase::green;
 
-    if (currentPhase == TrafficLightPhase::green) {
-        setCurrentPhase(TrafficLightPhase::red);
-        return;
-    }
-
-    setCurrentPhase(TrafficLightPhase::green);
+    setCurrentPhase(newPhase);
 }
 
 void TrafficLight::simulate() {
