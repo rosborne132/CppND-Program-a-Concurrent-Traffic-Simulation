@@ -62,7 +62,6 @@ private:
     // send in conjunction with move semantics.
 
     std::shared_ptr<MessageQueue<TrafficLightPhase>> _messages;
-    std::mutex _mtx;
 };
 
 #endif

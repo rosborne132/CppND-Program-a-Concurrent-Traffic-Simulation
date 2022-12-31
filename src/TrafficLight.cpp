@@ -31,7 +31,9 @@ void MessageQueue<T>::send(T &&msg) {
 
     std::cout << "Msg: " << msg << " has been added to the queue." << std::endl;
 
-    _queue.push_back(std::move(msg));
+    _queue.clear();
+
+    _queue.emplace_back(std::move(msg));
     _cond.notify_one();
 }
 
@@ -56,11 +58,11 @@ TrafficLightPhase TrafficLight::getCurrentPhase() { return _currentPhase; }
 
 void TrafficLight::setCurrentPhase(TrafficLightPhase newPhase) { _currentPhase = newPhase; }
 
-// Helper method that helps us generate a random time duration between 4 and 6 seconds.
+// Helper method that helps us generate a random time duration between 4000 and 6000 milliseconds.
 // This method was created with the help of ChatGPT.
 double TrafficLight::generateWaitDuration() {
     std::mt19937 rng(std::chrono::steady_clock::now().time_since_epoch().count());
-    std::uniform_real_distribution<double> dist(4, 6);
+    std::uniform_real_distribution<double> dist(4000, 6000);
 
     return dist(rng);
 }
@@ -103,7 +105,7 @@ void TrafficLight::cycleThroughPhases() {
             // FP.4b (Done): Send an update method to the message queue using move semantics.
             // The cycle duration should be a random value between 4 and 6 seconds.
             // Also, the while-loop should use std::this_thread::sleep_for to wait 1ms between two cycles.
-            future = std::async(std::launch::async, &MessageQueue<TrafficLightPhase>::send, _messages, std::move(currentPhase));
+            future = std::async(&MessageQueue<TrafficLightPhase>::send, _messages, std::move(currentPhase));
             future.wait();
 
             // Reset values for next cycle.
