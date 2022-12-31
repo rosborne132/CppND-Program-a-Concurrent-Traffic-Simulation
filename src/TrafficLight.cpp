@@ -35,7 +35,10 @@ void MessageQueue<T>::send(T &&msg) {
     _cond.notify_one();
 }
 
-TrafficLight::TrafficLight() { _currentPhase = TrafficLightPhase::red; }
+TrafficLight::TrafficLight() {
+    _currentPhase = TrafficLightPhase::red;
+    _messages = std::make_shared<MessageQueue<TrafficLightPhase>>();
+}
 
 void TrafficLight::waitForGreen() {
     // FP.5b (Done): add the implementation of the method waitForGreen, in which an infinite while-loop
@@ -81,9 +84,8 @@ void TrafficLight::simulate() {
 void TrafficLight::cycleThroughPhases() {
     // FP.2a (Done): Implement the function with an infinite loop that measures the time between two loop cycles
     // and toggles the current phase of the traffic light between red and green.
-    std::unique_lock<std::mutex> lock(_mtx);
+    std::unique_lock<std::mutex> uLock(_mtx);
     std::future<void> future;
-
 
     // init values
     std::chrono::_V2::system_clock::time_point currentTime = std::chrono::system_clock::now();

@@ -37,11 +37,10 @@ enum TrafficLightPhase {
     green
 };
 
-class TrafficLight : TrafficObject {
+class TrafficLight : public TrafficObject {
 public:
     // constructor / desctructor
     TrafficLight();
-    ~TrafficLight();
 
     // getters / setters
     TrafficLightPhase getCurrentPhase();
@@ -63,8 +62,7 @@ private:
     // send in conjunction with move semantics.
 
     std::shared_ptr<MessageQueue<TrafficLightPhase>> _messages;
-    std::condition_variable _condition;
-    std::mutex _mutex;
+    std::mutex _mtx;
 };
 
 #endif

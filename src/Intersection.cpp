@@ -1,14 +1,13 @@
-#include <iostream>
-#include <thread>
 #include <chrono>
 #include <future>
+#include <iostream>
 #include <random>
+#include <thread>
 
-#include "Street.h"
 #include "Intersection.h"
+#include "Street.h"
+#include "TrafficLight.h"
 #include "Vehicle.h"
-
-/* Implementation of class "WaitingVehicles" */
 
 int WaitingVehicles::getSize()
 {
@@ -41,12 +40,11 @@ void WaitingVehicles::permitEntryToFirstInQueue()
     _promises.erase(firstPromise);
 }
 
-/* Implementation of class "Intersection" */
-
 Intersection::Intersection()
 {
     _type = ObjectType::objectIntersection;
     _isBlocked = false;
+    _trafficLight = std::make_shared<TrafficLight>();
 }
 
 void Intersection::addStreet(std::shared_ptr<Street> street)
@@ -85,10 +83,14 @@ void Intersection::addVehicleToQueue(std::shared_ptr<Vehicle> vehicle)
     ftrVehicleAllowedToEnter.wait();
     lck.lock();
     std::cout << "Intersection #" << _id << ": Vehicle #" << vehicle->getID() << " is granted entry." << std::endl;
-    
-    // FP.6b : use the methods TrafficLight::getCurrentPhase and TrafficLight::waitForGreen to block the execution until the traffic light turns green.
 
+    // FP.6b (Done): use the methods TrafficLight::getCurrentPhase and TrafficLight::waitForGreen to block the execution until the traffic light turns green.
     lck.unlock();
+    TrafficLightPhase currentPhase = _trafficLight->getCurrentPhase();
+
+    if (currentPhase == TrafficLightPhase::red) {
+        _trafficLight->waitForGreen();
+    }
 }
 
 void Intersection::vehicleHasLeft(std::shared_ptr<Vehicle> vehicle)
@@ -108,7 +110,9 @@ void Intersection::setIsBlocked(bool isBlocked)
 // virtual function which is executed in a thread
 void Intersection::simulate() // using threads + promises/futures + exceptions
 {
-    // FP.6a : In Intersection.h, add a private member _trafficLight of type TrafficLight. At this position, start the simulation of _trafficLight.
+    // FP.6a (Done): In Intersection.h, add a private member _trafficLight of type TrafficLight.
+    // At this position, start the simulation of _trafficLight.
+    _trafficLight->simulate();
 
     // launch vehicle queue processing in a thread
     threads.emplace_back(std::thread(&Intersection::processVehicleQueue, this));
@@ -137,15 +141,4 @@ void Intersection::processVehicleQueue()
     }
 }
 
-bool Intersection::trafficLightIsGreen()
-{
-   // please include this part once you have solved the final project tasks
-   /*
-   if (_trafficLight.getCurrentPhase() == TrafficLightPhase::green)
-       return true;
-   else
-       return false;
-   */
-
-  return true; // makes traffic light permanently green
-} 
+bool Intersection::trafficLightIsGreen() { return _trafficLight->getCurrentPhase() == TrafficLightPhase::green; }
