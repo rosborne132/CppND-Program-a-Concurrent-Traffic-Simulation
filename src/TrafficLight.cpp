@@ -1,7 +1,10 @@
 #include <chrono>
+#include <future>
 #include <iostream>
+#include <mutex>
 #include <random>
 #include <thread>
+
 #include "TrafficLight.h"
 
 /* Implementation of class "MessageQueue" */
@@ -15,12 +18,18 @@
 //     // The received object should then be returned by the receive function.
 // }
 
-// template <typename T>
-// void MessageQueue<T>::send(T &&msg)
-// {
-//     // FP.4a : The method send should use the mechanisms std::lock_guard<std::mutex>
-//     // as well as _condition.notify_one() to add a new message to the queue and afterwards send a notification.
-// }
+template <typename T>
+void MessageQueue<T>::send(T &&msg)
+{
+    // FP.4a (Done): The method send should use the mechanisms std::lock_guard<std::mutex>
+    // as well as _condition.notify_one() to add a new message to the queue and afterwards send a notification.
+    std::lock_guard<std::mutex> lock(_mtx);
+
+    std::cout << "Msg: " << msg << " has been added to the queue." << std::endl;
+
+    _queue.push_back(std::move(msg));
+    _cond.notify_one();
+}
 
 TrafficLight::TrafficLight() { _currentPhase = TrafficLightPhase::red; }
 
@@ -36,6 +45,7 @@ TrafficLightPhase TrafficLight::getCurrentPhase() { return _currentPhase; }
 void TrafficLight::setCurrentPhase(TrafficLightPhase newPhase) { _currentPhase = newPhase; }
 
 // Helper method that helps us generate a random time duration between 4 and 6 seconds.
+// This method was created with the help of ChatGPT.
 double TrafficLight::generateWaitDuration() {
     std::mt19937 rng(std::chrono::steady_clock::now().time_since_epoch().count());
     std::uniform_real_distribution<double> dist(4, 6);
@@ -62,6 +72,9 @@ void TrafficLight::simulate() {
 void TrafficLight::cycleThroughPhases() {
     // FP.2a (Done): Implement the function with an infinite loop that measures the time between two loop cycles
     // and toggles the current phase of the traffic light between red and green.
+    std::unique_lock<std::mutex> lock(_mtx);
+    std::future<void> future;
+
 
     // init values
     std::chrono::_V2::system_clock::time_point currentTime = std::chrono::system_clock::now();
@@ -74,11 +87,13 @@ void TrafficLight::cycleThroughPhases() {
 
         if (currentTimeDiff >= waitDuration) {
             TrafficLight::togglePhase();
+            TrafficLightPhase currentPhase = getCurrentPhase();
 
-            // FP.4b
-            // Send an update method to the message queue using move semantics. The cycle duration should be a random value between 4 and 6 seconds.
+            // FP.4b (Done): Send an update method to the message queue using move semantics.
+            // The cycle duration should be a random value between 4 and 6 seconds.
             // Also, the while-loop should use std::this_thread::sleep_for to wait 1ms between two cycles.
-
+            future = std::async(std::launch::async, &MessageQueue<TrafficLightPhase>::send, _messages, std::move(currentPhase));
+            future.wait();
 
             // Reset values for next cycle.
             waitDuration = TrafficLight::generateWaitDuration();
